@@ -1,0 +1,81 @@
+---
+title: "ガイド3：Gatekeeper 連携"
+description: "Cloudflare OS の Gatekeeper で外部サービス（GitHub 等）と連携するための設定手順"
+---
+# Gatekeeper で外部サービスと連携
+
+Cloudflare OS の核となる「Gatekeeper」は、外部サービス（GitHub / Google / Notion / Slack 等）への
+アクセスを司る**独立した Worker（ドライバ）**です。安全性を重視した設計もここにあります。
+
+## Gatekeeper の役割
+
+- 外部サービスの API を「Cap'n Web API」としてきれいに包む
+- OAuth などの**認可**を処理する
+- アクセスを **「自分が意図した特定リソースだけ」に制限**する
+- すべてのアクションを**ログ**に残す
+- **副作用のある動作**には、人間の承認（承認パネル）を求める
+
+これは「ただの API 接続」以上のもので、エージェントや Gadget が想定外のことを
+しそうなら、後からまとめて承否を判断できるような設計になっています。
+
+## 現在の Gatekeeper 一覧
+
+次の package が同梱されています（例）:
+
+- `gatekeeper-github`（GitHub API）
+- `gatekeeper-google`（Google API）
+- `gatekeeper-cloudflare`（Cloudflare API）
+- `gatekeeper-notion`（Notion）
+- `gatekeeper-slack`（Slack）
+- `gatekeeper-confluence` / `gatekeeper-zoominfo` / `gatekeeper-supabase` / `gatekeeper-homeassistant` など
+
+## 設定手順（例: GitHub）
+
+基本的な流れは「各 package の README を読んで進める」ことです。
+
+1. 外部サービス側で **OAuth アプリを作成**する
+   - GitHub の場合: Settings → Developer settings → OAuth Apps
+   - **コールバック URL を登録**しておく（localhost / LAN IP / FQDN）
+2. 取得した **Client ID / Secret** を `.dev.vars` に書く
+
+   ```dotenv
+   GITHUB_CLIENT_ID=xxxx
+   GITHUB_CLIENT_SECRET=xxxx
+   ```
+
+3. 起動して、UI 上で「Add resource（リソース追加）」→ 目的のリポジトリを履歴追加
+4. エージェントに「このリポジトリを読んで」などのリクエストをして動作確認。
+
+::: {.callout-note title="秘匿情報の扱い"}
+  `.dev.vars` は gitignored なので、**コミットしない**こと。外部で公開する場合も
+  秘密情報（long-term secret）として慎重に管理してください。
+:::
+
+## 注意：クレデンシャルの保存と公開
+
+- OAuth を使うサービスの多くは **https のコールバック URL** を要求します。
+  - localhost の開発でも「https を要求されないサービス」であれば http でも動きますが、
+    明示的に確認してください。
+- 外部で公開するときは [ガイド2：QNAP](02-qnap.qmd) にまとめた HTTPS（Tunnel 等）を
+  先にふまえてください。
+
+## 「紹介（Introduction）」方式の考え方
+
+Cloudflare OS は、デフォルトではエージェント・Gadget は **どのリソースにもアクセスできません**。
+明示的に「紹介」してのみアクセスが自動的に与えられます。
+
+これは「MCP サーバーをあらかじめ全部入れておく」方式とは正反対で、
+**必要になったものにだけ最小限アクセスする**という能力ベースの考え方です。
+
+## Gatekeeper の自前デプロイ（今後の話）
+
+現状、Gatekeeper 自身もリポジトリ内の package であり、OS 本体と一緒にデプロイされます。
+将来は「Gatekeeper サービスを OS とは独立して展開・保守できるようにする」ことが
+構想されていますが、まだ詳細は決まっていません。
+
+---
+
+## 参考
+
+- [cloudflare-os README](https://github.com/cloudflare/cloudflare-os)
+- 次: [ガイド4：トラブルシューティング](04-troubleshoot.qmd)

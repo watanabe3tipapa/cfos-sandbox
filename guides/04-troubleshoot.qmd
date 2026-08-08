@@ -1,0 +1,91 @@
+---
+title: "ガイド4：トラブルシューティング"
+description: "Cloudflare OS を自前で動かすときによくあるトラブルと対処法"
+---
+# トラブルシューティング
+
+ローカル／NAS で動かすときのよくある問題と解決方法をまとめます。
+
+## 1. `pnpm install` が失敗する
+
+- **原因**: Node バージョンが古い（Vite7 は Node 20.19+ / 22.12+ が必要）。
+- **対処**: `nvm use 22` 等で Node 22 LTS にしてから再度 `pnpm install`。
+- **補足**: `pnpm-lock.yaml` があるなら `--frozen-lockfile` を付けて再現性を確保。
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+## 2. `wrangler` でポートが使用中（EADDRINUSE）
+
+- **原因**: 他に 8787 を使っているプロセスがある。
+- **対処**: 使わないプロセスを止めるか、`VITE_BACKEND_HOST` 等でポートを変えます。
+
+```bash
+lsof -i :8787       # 確認
+kill <PID>          # 該当プロセスを終了
+```
+
+## 3. ブラウザで開くと真っ白 / 読み込まない
+
+- **原因例**:
+  - 初回ビルドがまだおわっていない（`run-local` の初回は時間がかかる）
+  - サーバーを起動する前に `dist` が無い（`run-local` は自動でビルドするが、
+    失敗している場合あり）
+- **対処**:
+  ```bash
+  # フロントを明示的にビルド
+  cd packages/workshop-frontend && pnpm run build
+  ```
+  その後 root で `pnpm run-local`。
+
+## 4. OAuth で「Callback URL エラー」が出る
+
+- **原因**: 外部サービス側に登録したコールバック URL が **http のまま**、または
+  ホスト・ポートが一致していない（OAuth は完全一致が必須）
+- **対処**: `https://<ホスト名>/...` を OAuth アプリ設定へ、そしてアクセス先もその URL に。
+  - NAS 外部公開の場合は [ガイド2](02-qnap.qmd)（TLS / cloudflared）を先に。
+
+## 5. ログイン / Gatekeeper 認証が失敗する
+
+- **原因**: `.dev.vars` に書いた Client ID / Secret が正しくない／未設定。
+- **対処**:
+  - 環境変数を確認（`env | grep -i github`）
+  - 秘密が正しく注入されているかを、各 gatekeeper の README と照合
+  - `.dev.vars` は **quote や余白** などで狂わないよう慎重に書く
+
+## 6. NAS の CPU 負荷が高い / ARM機で失敗
+
+- **原因**: arm64 では `aws4fetch` やネイティブ依存を含むパッケージが公式では
+  十分に確認されていないことがある
+- **対処**: x86_64 機を前提にする（本サイトの前提）。どうしても arm の場合は
+  コンテナ化し、まず `container` 上で `pnpm install` が通るかを確認。
+
+## 7. 認証が破綻する（LAN 内で誰でも見える）
+
+- **原因**: デフォルトで `ADMINS=["admin"]` が付いている
+- **対処**: 外部公開前は admin を外す／パスワードを忘れず強化。
+  詳細は [ガイド2：QNAP NAS](02-qnap.qmd) を再確認。
+
+## 8. `wrangler login` を要求された
+
+- `pnpm run-local` は現在 Cloudflare アカウント不要で動きます。
+- もし `run-local` ではなく、Cloudflare 側にデプロイする場合にのみ `wrangler login` が必要。
+
+## 9. 実行ログの見かた
+
+- ターミナルに出る wrangler のログをまず見る。
+- `.wrangler` の中にも各種 state があるので、バックアップ／調査の対象に。
+
+```bash
+ls -la .wrangler
+cat .wrangler/state/v3/*   # 例
+```
+
+---
+
+## なかなか直らない時は
+
+- 公式: https://github.com/cloudflare/cloudflare-os (Issues / Discussions)
+- このサイトの [DEV-MEMO](https://github.com/watanabe3tipapa/cfos-sandbox/blob/main/DEV-MEMO.md) にも
+  発見した事象を追記して共有してください。

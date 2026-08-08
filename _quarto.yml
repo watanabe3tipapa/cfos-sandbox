@@ -1,0 +1,47 @@
+project:
+  type: website
+  render:
+    - index.qmd
+    - guides/*.qmd
+
+title: "Cloudflare OS 自前運用ノート"
+description: "Cloudflare OS を自分のデバイス（macOS / QNAP NAS）で動かすための技術解説メモ＆チュートリアル"
+site-url: https://watanabe3tipapa.github.io/cfos-sandbox/
+
+website:
+  title: "Cloudflare OS 自前運用ノート"
+  favicon: images/favicon.svg
+  page-footer:
+    left: "CC BY 4.0 — cfos-sandbox"
+    right: "Quarto × Cloudflare OS"
+  navbar:
+    title: "cfos-sandbox"
+    left:
+      - text: "ホーム"
+        file: index.qmd
+      - text: "チュートリアル"
+        menu:
+          - text: "1. macOS で動かす"
+            file: guides/01-macos.qmd
+          - text: "2. QNAP NAS で運用"
+            file: guides/02-qnap.qmd
+          - text: "3. Gatekeeper 連携"
+            file: guides/03-gatekeeper.qmd
+          - text: "4. トラブルシューティング"
+            file: guides/04-troubleshoot.qmd
+    right:
+      - text: "GitHub"
+        href: https://github.com/watanabe3tipapa/cfos-sandbox
+
+format:
+  html:
+    theme:
+      - cosmo
+      - styles/custom.scss
+    toc: true
+    code-copy: true
+    smooth-scroll: true
+
+resources:
+  - images
+  - styles

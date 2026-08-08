@@ -1,0 +1,79 @@
+---
+title: "ガイド2：QNAP NAS で運用"
+description: "Cloudflare OS を QNAP NAS 上で常時稼働させるための現実的アプローチと注意点"
+---
+# QNAP NAS で運用（TypeB）
+
+macOS だけで試した後は、**使いたい時にいつでも立ち上がっている**セルフホスト環境を
+目指したくなります。QNAP NAS 上で常時稼働させる方法を整理します。
+
+::: {.callout-warning title="最初に知っておく制約"}
+記事時点（2026-08）では、Cloudflare OS の**本番用 workerd デプロイの公式手順は
+まだ「COMING SOON」**です。つまり「プロダクション用の公式セットアップ」は存在せず、
+基礎的な構成（= 開発用の `pnpm run-local`）を常駐させて持ち上げる運用が現実解です。
+:::
+
+## 推奨ルート：Container Station で Node コンテナを常駐
+
+QNAP は **Container Station**（Docker ベース）が利用可能です。以下の要領で Node コンテナを作ります。
+
+1. **イメージ**: `node:22`（もしくは node:24）を pull
+2. **マウント**: Cloudflare OS のソースと `.wrangler` を永続ボリュームとしてマウント
+   （例: `/opt/cfos` に clone しておくと再構築が楽）
+3. **ポート**: 8787 → LAN に公開（ホストポート 8787:コンテナ 8787）
+4. **起動コマンド**:
+   ```bash
+   # コンテナ内で
+   corepack enable
+   cd /opt/cfos && pnpm install --frozen-lockfile
+   pnpm run-local &
+   ```
+5. Container Station は「再起動時に自動開始」をオンにして常駐化
+
+::: {.callout-tip title="Docker を使わない場合"}
+QTS 上に SSH で入り、Entware / opkg から `nodejs` を入れる方法もあります。
+ ただしパッケージ管理が QTS のものと競合しやすいため、**Docker（Container Station）を推奨**します。
+:::
+
+## 動作環境の前提
+
+- **x86_64（Intel / AMD CPU の QNAP）**を前提にしています。
+- **ARM（armv8 / arm64）の QNAP** は、`workerd` やランタイム上の依存パッケージの
+  ビルドが素通りしない可能性があるため**前提外**としています。
+  - → 実際の機種で試す場合は、「`pnpm install` が arm で通るか」をまず確認してください。
+
+## 外部公開（LAN の外から使う場合）
+
+- **LAN 内だけ**: `http://<NAS-IP>:8787` で全端末から使えます。まずはここから。
+- **外から使う場合**:
+  - 必ず **HTTPS** にします（OAuth クライアントは http を拒否する場合が多い）。
+  - QNAP の Reverse Proxy（アプリケーションポート設定）または Caddy / nginx で TLS を終端。
+  - クレジットカード不要で楽なら **Cloudflare Tunnel（`cloudflared`）** が有力。
+
+## 認証まわり（忘れずに設定する）
+
+- 既定のまま外に出すと、`ADMINS=["admin"]` で誰でもログインできます（開発用構成）。
+- 実際に外部公開するときは:
+  - パスワード・認証を必ず設定する
+  - `DISABLE_PASSWORD_AUTH=false`（デフォルト）のまま利用
+  - できれば password を強くし、**admin を削除** or 絞る
+
+## データのバックアップ
+
+- `.wrangler/`（Durable Objects の永続化）をバックアップ対象に入れる
+- NAS の定期バックアップ機能（Hyper Backup 等）で `/opt/cfos/.wrangler` を保存
+
+## セットアップの流れのまとめ
+
+```text
+1. QNAP > Container Station > node:22
+2. clone + pnpm install --frozen-lockfile
+3. pnpm run-local（8787 公開）
+4. 再起動時自動起動 / ポートマッピング
+5. （外使用時）HTTPS + 認証 + cloudflared
+```
+
+## 次のステップ
+
+[ガイド3：Gatekeeper 連携](03-gatekeeper.qmd) で外部サービスを繋ぎ、
+[ガイド4：トラブルシューティング](04-troubleshoot.qmd) でよくある問題に備えてください。

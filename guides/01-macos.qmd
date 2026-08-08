@@ -1,0 +1,95 @@
+---
+title: "ガイド1：macOS で動かす"
+description: "Cloudflare OS を macOS でローカル実行する最短手順と、pnpm run-local の内部解説"
+---
+# mac で動かす（TypeA）
+
+開発して試すのに最適なのは **macOS でのローカル実行**です。
+このページでは検証用の最短手順と「一体何が起きているのか」を解説します。
+
+## 手順（最短）
+
+```bash
+# 1) 前提ツールを確認
+node --version   # 20.19+ / 22.12+ が必要（Vite7 の要求）
+pnpm --version   # 11.x が望ましい（corepack で揃える）
+
+# 2) corepack で pnpm のバージョンをリポジトリ指定に合わせる
+corepack enable
+corepack prepare pnpm@11.17.0 --activate
+
+# 3) 本体を取得
+git clone https://github.com/cloudflare/cloudflare-os.git
+cd cloudflare-os
+
+# 4) 依存インストール（モノレポ全体）
+pnpm install
+
+# 5) ローカル起動
+pnpm run-local
+```
+
+起動に成功すると、最後に次のような表示がでます:
+
+```
+Starting: wrangler dev [...]
+```
+
+ブラウザで **http://localhost:8787** を開けば UI が表示されます。
+
+## `pnpm run-local` は何をしているのか（内部解説）
+
+`pnpm run-local` は、実際には `node scripts/run-local.mjs` を走らせています。
+その内部で何が起こるかを順に追います:
+
+1. **開発用ワーカー構成を自動生成**
+   - `wrangler.dev.jsonc`（gitignored）をルート・各 gatekeeper・`workshop-backend` に書き出す。
+2. **Gatekeeper を全数サービスバインディング**
+   - `packages/` 下の `gatekeeper-*` フォルダを読み取って、それぞれを
+     `service` バインディングとして backend に接続（例: `GATEKEEPER_GITHUB`）。
+3. **backend に `ADMINS=["admin"]` を挿入**
+   - ローカルで admin 機能を試すための用意です。
+4. **フロント資産の配信設定**
+   - `--serve-frontend-assets` を渡し、`workshop-frontend/dist` をバックエンドがそのまま配信。
+5. **`wrangler dev` をマルチコンフィグで同時起動**
+   - ルートRouter・バックエンド・各Gatekeeperの `wrangler.dev.jsonc` を複数指定して
+     単一ランタイム（workerd）内でまとめて起動します。
+
+つまり「サーバー 1 本」ではなく、**開発用 Router + バックエンド + 各 Gatekeeper が
+1つの workerd ランタイムで同時に動く**ということです。
+
+## データがどこに保存されるか
+
+- `.wrangler/` ディレクトリが生成され、Durable Objects のローカル永続化データが
+  ここに保存されます。
+- このフォルダを消すと、作ったワークスペースや Gadget は失われます。
+
+## 秘密情報は `.dev.vars` に書く
+
+リポジトリ直下の `.dev.vars`（gitignored）に外部サービスとの OAuth や tokens を書きます。
+
+```dotenv
+GITHUB_CLIENT_ID=xxxx
+GITHUB_CLIENT_SECRET=xxxx
+```
+
+`run-local` は起動時にこのファイルを読み込み、各 Worker の設定値に注入します。
+
+## 開発モード（構成を分けて開発する場合）
+
+リポジトリには「開発用」の分割モードもあります。
+
+```bash
+pnpm dev-server   # バックエンドを wrangler dev で起動（API 側）
+pnpm dev-client   # フロントを Vite で起動  → http://localhost:3000
+```
+
+- `run-local`: ビルド済みフロントをバックエンドが配信（本番に近い動作）
+- `dev-*`: Vite がフロントを配信（ホットリロードで開発しやすい）
+
+用途に合わせて使い分けてください。
+
+## 次のステップ
+
+ローカルで動いたら、次は外部サービス連携（[ガイド3：Gatekeeper](03-gatekeeper.qmd)）、
+そして常時稼働（[ガイド2：QNAP NAS](02-qnap.qmd)）へ進みましょう。

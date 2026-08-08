@@ -1,0 +1,6 @@
+[project]
+name = "cfos-sandbox"
+version = "0.1.0"
+description = "Cloudflare OS を自前デバイスで運用するための Quarto ノート"
+requires-python = ">=3.13"
+dependencies = []
