@@ -216,6 +216,35 @@ quarto preview     # ローカルプレビュー
 - [ ] TypeB: QNAP 上の Node コンテナで常駐起動を試験
 - [ ] Gatekeeper（GitHub）設定試験
 
+## トピック：ビルド検証ノート（2026-08-08）
+
+Quarto サイトのビルドを洗い出した際の検証トピック。ビルド自体はクリーンで問題なし。
+
+### 検証方法
+
+```bash
+quarto render --clean     # _site を消してゼロからビルド（警告・エラーの有無を確認）
+quarto preview            # ローカルプレビュー（全ページ HTTP 200 を確認）
+```
+
+### チェック項目と結果
+
+| # | トピック | 確認結果 |
+|---|---|---|
+| 1 | **クリーンビルドで警告ゼロ** | `quarto render --clean` で全5ページ生成、警告・エラーなし |
+| 2 | **SCSS テーマのコンパイル反映** | `styles/custom.scss` は `.qmd` の HTML 生成時にコンパイルされ、`site_libs/bootstrap/*.min.css` の中に
+  `navbar{border-bottom:3px solid #f6821f}`・`a{color:#f6821f}` として反映される（未コンパイルのままではない） |
+| 3 | **内部リンク整合性** | 全ページの相対リンク（`../index.html` 等）を実ファイル存在で検証 → 壊れなし |
+| 4 | **CI の再現性** | `uv sync --frozen` → `uv run quarto render`（CI）とローカルビルドの成果物が一致することを確認 |
+| 5 | **GH Actions の警告** | Node20 非推奨警告は Actions の最新版更新で解消済み。deploy ログに残る `punycode` の DeprecationWarning はライブラリ由来で無害 |
+| 6 | **deploy ログの `error_count: 10`** | エラーではなく deploy-pages の内部パラメータ（リトライ試行上限）。直後に `Reported success!` が続く |
+
+### 発見事項・注意点（再発防止）
+
+- `quarto preview` はポートを重複させるので、複数起動しない（`lsof -ti :4321` 等で終了する）。
+- リンク検証は「実ファイルの存在」で行う。相対パス解決は `python3 -c "os.path.normpath(...)"` で行うと誤判定しない。
+- `_site/` は gitignored（デプロイは CI が生成する）。ローカル編集後は `quarto render` → push → CI を確認する流れ。
+
 ## 更新履歴
 
 - 2026-08-08: 初版作成。
@@ -227,3 +256,4 @@ quarto preview     # ローカルプレビュー
   - `run-local` のオプション（`--use-workers-ai-binding` / `VITE_BACKEND_HOST`）を補足
   - デプロイ選択肢（os.cloudflare.app/deploy / cloudflare-os-starter）を追記
   - GH Actions を最新バージョンへ更新（checkout v5 / setup-uv v9 / configure-pages v6 / upload-pages-artifact v5 / deploy-pages v5）
+- 2026-08-08: **ビルド検証ノート**を追記（`quarto render --clean` の結果、SCSS コンパイルの確認、リンク整合の検証方法、deploy ログの `error_count` 理解）。
