@@ -7,7 +7,6 @@ Cloudflare OS（[`cloudflare/cloudflare-os`](https://github.com/cloudflare/cloud
 
 - **LP + チュートリアル**: Quarto（`type: website`）製。`index.qmd` が LP、
   `guides/*.qmd` がチュートリアル4本（macOS / QNAP / Gatekeeper / トラブル）。
-- **DEV-MEMO.md**: 技術解説付きのセットアップメモ（主成果物）。
 
 ## ローカル手順
 
@@ -27,11 +26,10 @@ uv run quarto render
 ## GitHub Pages 公開
 
 `.github/workflows/gh-pages.yml` が、`uv`（流用版）＋`quarto render` を走らせて
-`_site/` を Pages にデプロイします。リポジトリ設定でソースを「GitHub Actions」にしてください。
+`_site/` を Pages にデプロイします。
 
-※ このリポジトリは独立リポジトリ化していません（親リポジトリ管理のディレクトリ）。
-  公開する前に `git init`（または独立リポジトリ作成）が必要です。詳細は
-  [DEV-MEMO.md](DEV-MEMO.md) を参照。
+- サイト: https://watanabe3tipapa.github.io/cfos-sandbox/
+- Pages 設定はソース「GitHub Actions」方式。
 
 ## ライセンス
 

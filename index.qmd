@@ -82,7 +82,7 @@ Cloudflare OS は、Cloudflare Workers 上に構築された「AI 生産性環�
 ## このノートの裏側（どうやって作ったか）
 
 Quarto（ウェブサイト型）で作られた静的サイトです。ソースと GitHub Pages へのあげ方は
-[DEV-MEMO.md](https://github.com/watanabe3tipapa/cfos-sandbox/blob/main/DEV-MEMO.md) に記録しています。
+[リポジトリの README](https://github.com/watanabe3tipapa/cfos-sandbox) に記録しています。
 
 ---
 

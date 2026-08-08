@@ -87,5 +87,5 @@ cat .wrangler/state/v3/*   # 例
 ## なかなか直らない時は
 
 - 公式: https://github.com/cloudflare/cloudflare-os (Issues / Discussions)
-- このサイトの [DEV-MEMO](https://github.com/watanabe3tipapa/cfos-sandbox/blob/main/DEV-MEMO.md) にも
+- このサイトの [GitHub リポジトリ](https://github.com/watanabe3tipapa/cfos-sandbox) にも
   発見した事象を追記して共有してください。
