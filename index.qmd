@@ -84,6 +84,27 @@ Cloudflare OS は、Cloudflare Workers 上に構築された「AI 生産性環�
 Quarto（ウェブサイト型）で作られた静的サイトです。ソースと GitHub Pages へのあげ方は
 [リポジトリの README](https://github.com/watanabe3tipapa/cfos-sandbox) に記録しています。
 
+### Cloudflare OS 本体のデプロイ先（参考）
+
+- **公式クラウド**: [os.cloudflare.app/deploy](https://os.cloudflare.app/deploy) から
+  Cloudflare アカウントへ最短デプロイ
+- **上級向け**: [cloudflare-os-starter](https://github.com/cloudflare/cloudflare-os-starter)
+  （Gatekeeper 込み・コード変更を伴うデプロイ用スターター）
+- **本サイトの主題**: ローカル（macOS）／NAS（QNAP）で開発用 `run-local` を動かして検証
+
+---
+
+## 試してみよう（What to try）
+
+ローカルで動かしたら、こんなプロンプトを試すと Cloudflare OS の特徴がわかります
+（公式 README の例を日本語化）:
+
+- **「来週の顧客ミーティング用のスライドを作って」** → 組み込みのスライド Blueprint を利用
+- **「共同編集できるホワイトボードアプリを作って」** → ゼロから Gadget を作成
+- **「三目並べを作って」の後に「あなたは X、私は O。先手を打ったよ。あなたの番」** → エージェントと対戦
+- **「この GitHub リポジトリの issue ダッシュボードを作って」**（リポジトリを添付、GitHub 連携設定済みが前提）
+- **「この Google ドキュメントのタイポを直して」**（ドキュメントを添付、Google 連携設定済みが前提）
+
 ---
 
 ## FAQ

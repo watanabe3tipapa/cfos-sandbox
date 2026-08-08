@@ -103,6 +103,15 @@ pnpm dev-client   # frontend を Vite で起動（http://localhost:3000）
 - `run-local`: ビルド済みフロントをバックエンドが配信（本番に近い動作）
 - `dev-*`: Vite がフロントを配信（ホットリロードで開発しやすい）
 
+### `run-local` の追加オプション
+
+- **`--use-workers-ai-binding`**: Workers AI を backend にバインドして使う場合。
+  - ⚠️ **このオプションを使う場合のみ `wrangler login`（Cloudflare アカウント）が必要**。
+    通常の起動はアカウント不要（本文の「login 不要」はこの通常ケースを指す）。
+- **`VITE_BACKEND_HOST`**: 開発時のバックエンドホスト指定。
+  - 例: `VITE_BACKEND_HOST=localhost:9000`（ポート 9000 を使う場合）。
+    このとき`--port`も wrangler へ渡される。
+
 ## TypeB: QNAP NAS でセルフホスト
 
 ### 最初に知っておくべき制約（重要）
@@ -155,6 +164,10 @@ opkg install nodejs npm corepack
 
 外部サービス連携の際は各 `packages/gatekeeper-*` の README に従う。
 
+同梱の Gatekeeper（README 準拠）:
+GitHub / Google / Cloudflare / Supabase / Notion / Confluence / Email Workers /
+Home Assistant / Slack / Spotify / ZoomInfo。
+
 - 例: GitHub 連携 → OAuth アプリを作成し、取得した Client ID / Secret を `.dev.vars` に設定。
 - OAuth コールバック URL は https でないと受け付けないサービスが多い。
 
@@ -169,7 +182,15 @@ opkg install nodejs npm corepack
 
 ## GitHub Pages へ公開（Quarto）
 
-本リポジトリ自身を Quarto でサイト化し、GH Pages にデプロイする。
+Cloudflare OS 本体には以下のデプロイ選択肢がある（本リポジトリは Playground として利用）:
+
+- **公式のクラウドデプロイ**: https://os.cloudflare.app/deploy
+  （自分の Cloudflare アカウントへ最短デプロイ）
+- **上級デプロイ用スターター**: https://github.com/cloudflare/cloudflare-os-starter
+  （Gatekeeper 込み・コード変更を伴うデプロイ）
+- **本リポジトリの用途**: 開発用 `run-local` をローカル（macOS）／NAS（TypeB）で常駐させて検証。
+
+本リポジトリ自身は Quarto でサイト化し、GH Pages にデプロイする。
 
 ```bash
 quarto render      # _site/ を生成
@@ -201,3 +222,8 @@ quarto preview     # ローカルプレビュー
 - 2026-08-08: Quarto サイト（LP＋ガイド4本）実装、ビルド検証。
 - 2026-08-08: 独立リポジトリ化＆Pages デプロイ完了。
 - 2026-08-08: PLAN.md を rm（本メモは復活）。
+- 2026-08-08: **再検証**（内容の事実確認と更新）。
+  - Gatekeeper 一覧を公式 README 準拠へ（email / spotify 追加）
+  - `run-local` のオプション（`--use-workers-ai-binding` / `VITE_BACKEND_HOST`）を補足
+  - デプロイ選択肢（os.cloudflare.app/deploy / cloudflare-os-starter）を追記
+  - GH Actions を最新バージョンへ更新（checkout v5 / setup-uv v9 / configure-pages v6 / upload-pages-artifact v5 / deploy-pages v5）

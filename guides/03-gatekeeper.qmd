@@ -20,14 +20,23 @@ Cloudflare OS の核となる「Gatekeeper」は、外部サービス（GitHub /
 
 ## 現在の Gatekeeper 一覧
 
-次の package が同梱されています（例）:
+次の package が同梱されています（README 準拠・全一覧）:
 
-- `gatekeeper-github`（GitHub API）
-- `gatekeeper-google`（Google API）
-- `gatekeeper-cloudflare`（Cloudflare API）
-- `gatekeeper-notion`（Notion）
-- `gatekeeper-slack`（Slack）
-- `gatekeeper-confluence` / `gatekeeper-zoominfo` / `gatekeeper-supabase` / `gatekeeper-homeassistant` など
+| package | 接続先 |
+|---|---|
+| `gatekeeper-github` | GitHub API |
+| `gatekeeper-google` | Google API |
+| `gatekeeper-cloudflare` | Cloudflare API |
+| `gatekeeper-supabase` | Supabase API |
+| `gatekeeper-notion` | Notion API |
+| `gatekeeper-confluence` | Confluence API |
+| `gatekeeper-email` | Email Workers |
+| `gatekeeper-homeassistant` | Home Assistant |
+| `gatekeeper-slack` | Slack API |
+| `gatekeeper-spotify` | Spotify |
+| `gatekeeper-zoominfo` | ZoomInfo API |
+
+各 package には設定手順の README が同梱されている（一覧は公式 README の「Configuring external services」を反映）。
 
 ## 設定手順（例: GitHub）
 
